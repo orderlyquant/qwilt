@@ -7,10 +7,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Brandon Farr">
-<meta name="dcterms.date" content="2021-01-26">
-<meta name="description" content="today’s directed wanderings">
+<meta name="dcterms.date" content="2021-02-10">
+<meta name="description" content="An attempt to get my head around pull requests based on the fork and clone model as implemented in the usethis package.">
 
-<title>Orderly Qwilting - distill and timetk</title>
+<title>Orderly Qwilting - Understanding pull requests</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -163,9 +163,15 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#distill-blog" id="toc-distill-blog" class="nav-link active" data-scroll-target="#distill-blog">Distill blog</a></li>
-  <li><a href="#free-r-tip" id="toc-free-r-tip" class="nav-link" data-scroll-target="#free-r-tip">Free R Tip</a></li>
-  <li><a href="#git-sql" id="toc-git-sql" class="nav-link" data-scroll-target="#git-sql">GIT + SQL</a></li>
+  <li><a href="#fork-and-clone" id="toc-fork-and-clone" class="nav-link active" data-scroll-target="#fork-and-clone">Fork and clone</a></li>
+  <li><a href="#develop" id="toc-develop" class="nav-link" data-scroll-target="#develop">Develop</a>
+  <ul class="collapse">
+  <li><a href="#local-development" id="toc-local-development" class="nav-link" data-scroll-target="#local-development">Local development</a></li>
+  <li><a href="#keeping-up-with-owner" id="toc-keeping-up-with-owner" class="nav-link" data-scroll-target="#keeping-up-with-owner">Keeping up with OWNER</a></li>
+  </ul></li>
+  <li><a href="#create-pull-request" id="toc-create-pull-request" class="nav-link" data-scroll-target="#create-pull-request">Create pull request</a></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">Summary</a></li>
+  <li><a href="#notes" id="toc-notes" class="nav-link" data-scroll-target="#notes">Notes</a></li>
   </ul>
 </nav>
     </div>
@@ -174,16 +180,16 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">distill and timetk</h1>
+<h1 class="title">Understanding pull requests</h1>
   <div class="quarto-categories">
-    <div class="quarto-category">timetk</div>
-    <div class="quarto-category">distill</div>
+    <div class="quarto-category">usethis</div>
+    <div class="quarto-category">git</div>
   </div>
   </div>
 
 <div>
   <div class="description">
-    <p>today’s directed wanderings</p>
+    <p>An attempt to get my head around pull requests based on the fork and clone model as implemented in the <code>usethis</code> package.</p>
   </div>
 </div>
 
@@ -200,7 +206,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">January 26, 2021</p>
+      <p class="date">February 10, 2021</p>
     </div>
   </div>
     
@@ -209,61 +215,100 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 </header>
 
-<p>Today, I worked on the following:</p>
+<p>“Fork and clone” is the basis for issuing the “pull requests” that are the lifeblood of open source development on github in the R universe. The purpose of this <a href="https://orderlyquant.github.io/wilting/">What I Learned Today</a> post is to understand this workflow from two levels:</p>
 <ol type="1">
-<li>setting up this <a href="https://orderlyquant.github.io/wilting">blog</a></li>
-<li>running through the weekly Free R Tip from <a href="https://www.business-science.io/">business-science</a></li>
-<li>read through <a href="https://caitlinhudon.com/2018/11/28/git-sql-together/">GIT SQL Together</a></li>
+<li>the git/github concepts</li>
+<li>the <code>usethis</code> helper functions</li>
 </ol>
-<section id="distill-blog" class="level2">
-<h2 class="anchored" data-anchor-id="distill-blog">Distill blog</h2>
-<p>Set up this blog using the <code>distill</code> package and <a href="https://pages.github.com/">github pages</a>. A few takeaways:</p>
-<ul>
-<li>see <a href="https://github.blog/2016-12-09-publishing-with-github-pages-now-as-easy-as-1-2-3/">here</a> for details on getting your repo right</li>
-<li>see <a href="https://orderlyquant.github.io/wilting/about.html">About</a> for other details</li>
-</ul>
-</section>
-<section id="free-r-tip" class="level2">
-<h2 class="anchored" data-anchor-id="free-r-tip">Free R Tip</h2>
-<p>This week’s tip was about many ways to create data frames/tibbles. I was familiar with these, but found the use of <code>timetk::tk_make_timeseries</code> informative.</p>
+<p>Good reference information is found <a href="https://usethis.r-lib.org/articles/articles/pr-functions.html">here</a>.</p>
+<section id="fork-and-clone" class="level2">
+<h2 class="anchored" data-anchor-id="fork-and-clone">Fork and clone</h2>
+<p>To begin a “fork and clone” within the “happygitwithr” / <code>usethis</code> recommended workflow, run:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>tibble<span class="sc">::</span><span class="fu">tibble</span>(</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">date          =</span> timetk<span class="sc">::</span><span class="fu">tk_make_timeseries</span>(<span class="st">"2010"</span>, <span class="at">length_out =</span> <span class="dv">12</span>, <span class="at">by =</span> <span class="st">"quarter"</span>),</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">interest_rate =</span> (<span class="fu">seq</span>(<span class="dv">12</span>, <span class="dv">3</span>, <span class="at">length.out =</span> <span class="dv">12</span>) <span class="sc">*</span> (<span class="fu">sin</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">12</span>) <span class="sc">+</span> <span class="dv">2</span>)) <span class="sc">/</span> <span class="dv">12</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 12 × 2
-   date       interest_rate
-   &lt;date&gt;             &lt;dbl&gt;
- 1 2010-01-01         2.84 
- 2 2010-04-01         2.71 
- 3 2010-07-01         1.85 
- 4 2010-10-01         0.989
- 5 2011-01-01         0.757
- 6 2011-04-01         1.13 
- 7 2011-07-01         1.57 
- 8 2011-10-01         1.56 
- 9 2012-01-01         1.10 
-10 2012-04-01         0.563
-11 2012-07-01         0.318
-12 2012-10-01         0.366</code></pre>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>usethis<span class="sc">::</span><span class="fu">create_from_github</span>(<span class="st">"OWNER/REPO"</span>, <span class="st">"local_dir"</span>, <span class="at">fork =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+<p><img src="images/fork-and-clone.png" class="img-fluid"></p>
 </div>
 </div>
-<p>Note that the <code>by</code> argument is very flexible:</p>
-<ul>
-<li><code>by</code> - a character string, containing one of “sec”, “min”, “hour”, “day”, “week”, “month”, “quarter” or “year”. You can create regularly spaced sequences using phrases like by = “10 min”</li>
-</ul>
-</section>
-<section id="git-sql" class="level2">
-<h2 class="anchored" data-anchor-id="git-sql">GIT + SQL</h2>
+<p>This accomplishes three things:</p>
 <ol type="1">
-<li>You will always need that query again, so “GIT” it</li>
-<li>Queries change through time, you <em>may</em> need a previous version when you realize the <em>improved</em> query “broke” something in a way that wasn’t immediately obvious
+<li><p>A special copy, a <strong>fork</strong>, of <code>OWNER/REPO</code> is made to your github account, referred to herein as <code>YOU/REPO</code>.</p></li>
+<li><p><code>YOU/REPO</code> is <strong>cloned</strong> to <code>local_dir</code> on your computer.</p></li>
+<li><p>git “remotes” are setup as follows:</p>
 <ul>
-<li>save with a <code>.sql</code> extension</li>
+<li><em>origin</em>: <code>YOU/REPO</code>, can <em>push</em> and <em>pull</em></li>
+<li><em>upstream</em>: <code>OWNER/REPO</code>, can <em>pull</em>, can’t <em>push</em></li>
 </ul></li>
 </ol>
-<p>Looks like there are other interesting posts from this site. I added one to Notion, so it may be covered here someday.</p>
+<p>Best “pull request” practices dictate working on a local branch in order to avoid local merge conflicts and to ease the merge process for <code>OWNER</code> once the “pull request” is issued. To establish a local branch on which to do your work, run:</p>
+<div class="cell">
+
+</div>
+<p>This creates and switches to a local development branch, <code>local/dev_branch</code>, that is separate from the <code>local/main</code> branch. The allows your local repo to incorporate changes in <code>upstream</code>, i.e.&nbsp;keep up-to-date with development in <code>OWNER/REPO</code> while you develop locally.</p>
+</section>
+<section id="develop" class="level2">
+<h2 class="anchored" data-anchor-id="develop">Develop</h2>
+<section id="local-development" class="level3">
+<h3 class="anchored" data-anchor-id="local-development">Local development</h3>
+<p>Develop as usual, committing to <code>local/dev_branch</code> as appropriate via git tools included with Rstudio.</p>
+</section>
+<section id="keeping-up-with-owner" class="level3">
+<h3 class="anchored" data-anchor-id="keeping-up-with-owner">Keeping up with OWNER</h3>
+<p>As necessary, and certainly recommended prior to issuing a “pull request”, pull down any changes happening on <code>upstream/main</code> by running:</p>
+<div class="cell">
+
+</div>
+<div class="cell">
+<div class="cell-output-display">
+<p><img src="images/merge-main.png" class="img-fluid"></p>
+</div>
+</div>
+<p>This brings <code>local/main</code> up-to-date with all development on <code>upstream/main</code>. This should happen without any issue if you haven’t touched <code>local/main</code>, because that is where the updates are pulled to.</p>
+<p><em>My current understanding is that this doesn’t perform any merge analysis between</em> <code>local/main</code> <em>and</em> <code>local/dev_branch</code>.</p>
+</section>
+</section>
+<section id="create-pull-request" class="level2">
+<h2 class="anchored" data-anchor-id="create-pull-request">Create pull request</h2>
+<p>When you are ready to make the pull request, run the following:</p>
+<div class="cell">
+
+</div>
+<div class="cell">
+<div class="cell-output-display">
+<p><img src="images/pr-push.png" class="img-fluid"></p>
+</div>
+</div>
+<p>This accomplishes the following:</p>
+<ul>
+<li>pushes your changes to your forked repo, <code>YOU/REPO</code></li>
+<li>launches a browser window with the github page of <code>OWNER/REPO</code></li>
+<li>makes available the “pull request” option within github</li>
+</ul>
+<p>At this point, you work with submitting the pull request on github. For the purposes of this post, assume the pull request is accepted by <code>OWNER</code>. You finish the pull request locally by running:</p>
+<div class="cell">
+
+</div>
+<p>This once again brings <code>local/main</code> up-to-date with <code>upstream/main</code>, which now includes the changes incorporated in the accepted pull request. It also has the effect of switching back to the default branch, <code>main</code> and deleting the development branch <code>dev_branch</code>.</p>
+<p>To make sure <code>OWNER/REPO</code> receives the changes of the merged pull request, in a shell run:</p>
+<div class="cell">
+
+</div>
+</section>
+<section id="summary" class="level2">
+<h2 class="anchored" data-anchor-id="summary">Summary</h2>
+<div class="cell">
+
+</div>
+</section>
+<section id="notes" class="level2">
+<h2 class="anchored" data-anchor-id="notes">Notes</h2>
+<ul>
+<li>Called a “pull request”, because at the end of the day, <code>YOU</code> are asking <code>OWNER</code> to pull your changes into the <code>OWNER/REPO</code>.</li>
+<li>“formal” names, like <code>OWNER/REPO</code> and “aliases” like <code>upstream</code> have been used interchangeably (sloppily?) to reinforce the concept that “aliases” are useful shorthand for “formal” names</li>
+<li>My sense is that the <strong>fork</strong>ed copy that sits in <code>YOU</code> is there largely for the purpose of being the basis of the pull request. In the documented <code>usethis</code> workflow, <code>pr_push()</code> is the only time that <code>YOU/REPO</code> gets updated during development of the pull request.</li>
+</ul>
 
 
 </section>

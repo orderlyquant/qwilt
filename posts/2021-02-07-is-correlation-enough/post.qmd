@@ -1,0 +1,162 @@
+---
+title: "Is Correlation Enough?"
+description: |
+  Questioning whether the mathematical construct: "correlation" is the
+  best measure of determining substitute securities
+author: Brandon Farr
+date: 02-07-2021
+categories: ['tidyquant', 'tibbletime', 'finance']
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, code_folding = NULL)
+```
+
+**Short-comings of previous analysis**
+
+- we were lucky that the example dataset showed extreme "non-stationarity"
+  in correlation between stocks
+- this naturally raises the question of whether correlation (not to mention
+  which correlation: full data-set, rolling window, ...) is the appropriate
+  measure to use in seeking substitutes
+
+```{r}
+#| echo: true
+
+library(tidyverse)  # for tidy/dplyr work
+library(rvest)      # for web-scraping
+library(tidyquant)  # for quant work (tiingo pricing, tq_mutate ...)
+library(hrbrthemes) # preferred theming base
+library(oqthemes)   # oq colors
+
+```
+
+Once this chunk has been run successfully, just load the data from the local
+csv`s: `sp500.csv` and `peer_pricing.csv`.
+
+
+Again, load the pre-stored data, and calculate returns.
+
+```{r}
+#| label: load-local-data
+
+peer_pricing_tbl <- read_csv("data/peer_pricing.csv")
+
+glimpse(peer_pricing_tbl)
+
+# calculate returns as well
+peer_returns_tbl <- peer_pricing_tbl %>%
+  group_by(symbol) %>%
+  tq_transmute(adjusted, periodReturn, period = "daily", col_rename = "return")
+
+```
+
+
+In a minor adjustment from last-time, begin the creation of the peers table with a direct call to `left_join`, making the two data sets more explicit versus the pipe version.
+
+```{r}
+
+aapl_peer_returns_tbl <-
+  left_join(
+    # desc
+    peer_returns_tbl %>%
+      filter(symbol == "AAPL") %>%
+      select(symbol, date, return),
+    
+    # desc
+    peer_returns_tbl %>%
+      filter(symbol != "AAPL") %>%
+      select(symbol, date, return),
+    by = "date",
+    suffix = c("_1", "_2")
+  ) %>%
+  select(date, matches("symbol"), everything()) %>%
+  arrange(symbol_2, date) %>%
+  filter(!(return_1 == 0 & return_2 == 0))  # remove days where returns == 0
+
+```
+
+As we saw last time, even the "smoothed" representation of the 30-day
+rolling correlation exhibits significant non-stationarity.
+
+```{r}
+#| code-fold: show
+
+library(tibbletime)
+
+cor_roll <- rollify(~cor(.x, .y), window = 30)
+
+aapl_cor_tbl <-
+  aapl_peer_returns_tbl %>%
+  group_by(symbol_2) %>%
+  mutate(cor = cor_roll(return_1, return_2))
+
+aapl_cor_tbl %>%
+  ggplot(aes(x = date, y = cor, color = symbol_2)) +
+  geom_hline(yintercept = 0, color = "gray40") +
+  geom_smooth(se = FALSE) + # default loess smoothing
+  ylim(-1, 1) +
+  labs(
+    title = "AAPL Stock Correlation",
+    subtitle = "with GICS sub-industry peers",
+    caption = "30-trading day rolling windows",
+    x = NULL, y = NULL, color = NULL
+  ) +
+  theme_ipsum() +
+  theme(legend.position = "bottom") +
+  scale_color_oq() +
+  # scale_x_date(expand = expansion(mult = c(0, 0))) +
+  # for legend to have 1 row
+  guides(col = guide_legend(nrow = 1))
+
+```
+
+## What is a substitute
+
+When looking for a *substitute* for portfolio purposes, we are seeking:
+
+- a stock that will perform in line with a base security over a given time-frame
+
+We know that period returns are the compounded result of daily returns. So,
+maybe the correlation over the data time frame of the period returns (here
+30 days) is a better measure of a good substitute.
+
+Or, perhaps the "active" return of the two securities (base and substitute)
+through time is a better, simpler measure as it measure the actual gain/loss
+that would be experienced by substituting.
+
+```{r}
+
+period_return = function(return) { cumprod(1 + return) %>% last() - 1}
+
+pr_roll <- rollify(~period_return(.x), window = 30)
+
+aapl_pr_tbl <- aapl_peer_returns_tbl %>%
+  group_by(symbol_2) %>%
+  mutate(
+    pr_1 = pr_roll(return_1),
+    pr_2 = pr_roll(return_2)
+  )
+
+
+aapl_pr_tbl %>%
+  group_by(symbol_2) %>%
+  mutate(cor = cor_roll(pr_1, pr_2)) %>%
+  ggplot(aes(x = date, y = cor, color = symbol_2)) +
+  geom_hline(yintercept = 0, color = "gray40") +
+  geom_smooth(se = FALSE) + # default loess smoothing
+  ylim(-1, 1) +
+  labs(
+    title = "AAPL Stock Correlation",
+    subtitle = "with GICS sub-industry peers",
+    caption = "30-trading day rolling windows",
+    x = NULL, y = NULL, color = NULL
+  ) +
+  theme_ipsum() +
+  theme(legend.position = "bottom") +
+  scale_color_oq() +
+  # scale_x_date(expand = expansion(mult = c(0, 0))) +
+  # for legend to have 1 row
+  guides(col = guide_legend(nrow = 1))
+```
+

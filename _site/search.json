@@ -1,5 +1,19 @@
 [
   {
+    "objectID": "posts/2021-02-07-is-correlation-enough/post.html",
+    "href": "posts/2021-02-07-is-correlation-enough/post.html",
+    "title": "Is Correlation Enough?",
+    "section": "",
+    "text": "Short-comings of previous analysis\nOnce this chunk has been run successfully, just load the data from the local csvs:sp500.csvandpeer_pricing.csv`.\nAgain, load the pre-stored data, and calculate returns.\nIn a minor adjustment from last-time, begin the creation of the peers table with a direct call to left_join, making the two data sets more explicit versus the pipe version.\nAs we saw last time, even the “smoothed” representation of the 30-day rolling correlation exhibits significant non-stationarity."
+  },
+  {
+    "objectID": "posts/2021-02-07-is-correlation-enough/post.html#what-is-a-substitute",
+    "href": "posts/2021-02-07-is-correlation-enough/post.html#what-is-a-substitute",
+    "title": "Is Correlation Enough?",
+    "section": "What is a substitute",
+    "text": "What is a substitute\nWhen looking for a substitute for portfolio purposes, we are seeking:\n\na stock that will perform in line with a base security over a given time-frame\n\nWe know that period returns are the compounded result of daily returns. So, maybe the correlation over the data time frame of the period returns (here 30 days) is a better measure of a good substitute.\nOr, perhaps the “active” return of the two securities (base and substitute) through time is a better, simpler measure as it measure the actual gain/loss that would be experienced by substituting.\n\nperiod_return = function(return) { cumprod(1 + return) %>% last() - 1}\n\npr_roll <- rollify(~period_return(.x), window = 30)\n\naapl_pr_tbl <- aapl_peer_returns_tbl %>%\n  group_by(symbol_2) %>%\n  mutate(\n    pr_1 = pr_roll(return_1),\n    pr_2 = pr_roll(return_2)\n  )\n\n\naapl_pr_tbl %>%\n  group_by(symbol_2) %>%\n  mutate(cor = cor_roll(pr_1, pr_2)) %>%\n  ggplot(aes(x = date, y = cor, color = symbol_2)) +\n  geom_hline(yintercept = 0, color = \"gray40\") +\n  geom_smooth(se = FALSE) + # default loess smoothing\n  ylim(-1, 1) +\n  labs(\n    title = \"AAPL Stock Correlation\",\n    subtitle = \"with GICS sub-industry peers\",\n    caption = \"30-trading day rolling windows\",\n    x = NULL, y = NULL, color = NULL\n  ) +\n  theme_ipsum() +\n  theme(legend.position = \"bottom\") +\n  scale_color_oq() +\n  # scale_x_date(expand = expansion(mult = c(0, 0))) +\n  # for legend to have 1 row\n  guides(col = guide_legend(nrow = 1))"
+  },
+  {
     "objectID": "posts/2021-01-30-better-stock-correlation-analysis/better-stock-correlation-analysis.html",
     "href": "posts/2021-01-30-better-stock-correlation-analysis/better-stock-correlation-analysis.html",
     "title": "Better Stock Correlation Analysis",
@@ -63,11 +77,53 @@
     "text": "GIT + SQL\n\nYou will always need that query again, so “GIT” it\nQueries change through time, you may need a previous version when you realize the improved query “broke” something in a way that wasn’t immediately obvious\n\nsave with a .sql extension\n\n\nLooks like there are other interesting posts from this site. I added one to Notion, so it may be covered here someday."
   },
   {
+    "objectID": "posts/2021-02-10-understanding-pull-requests/post.html",
+    "href": "posts/2021-02-10-understanding-pull-requests/post.html",
+    "title": "Understanding pull requests",
+    "section": "",
+    "text": "“Fork and clone” is the basis for issuing the “pull requests” that are the lifeblood of open source development on github in the R universe. The purpose of this What I Learned Today post is to understand this workflow from two levels:\nGood reference information is found here."
+  },
+  {
+    "objectID": "posts/2021-02-10-understanding-pull-requests/post.html#fork-and-clone",
+    "href": "posts/2021-02-10-understanding-pull-requests/post.html#fork-and-clone",
+    "title": "Understanding pull requests",
+    "section": "Fork and clone",
+    "text": "Fork and clone\nTo begin a “fork and clone” within the “happygitwithr” / usethis recommended workflow, run:\n\nusethis::create_from_github(\"OWNER/REPO\", \"local_dir\", fork = TRUE)\n\n\n\n\n\n\nThis accomplishes three things:\n\nA special copy, a fork, of OWNER/REPO is made to your github account, referred to herein as YOU/REPO.\nYOU/REPO is cloned to local_dir on your computer.\ngit “remotes” are setup as follows:\n\norigin: YOU/REPO, can push and pull\nupstream: OWNER/REPO, can pull, can’t push\n\n\nBest “pull request” practices dictate working on a local branch in order to avoid local merge conflicts and to ease the merge process for OWNER once the “pull request” is issued. To establish a local branch on which to do your work, run:\n\n\n\nThis creates and switches to a local development branch, local/dev_branch, that is separate from the local/main branch. The allows your local repo to incorporate changes in upstream, i.e. keep up-to-date with development in OWNER/REPO while you develop locally."
+  },
+  {
+    "objectID": "posts/2021-02-10-understanding-pull-requests/post.html#develop",
+    "href": "posts/2021-02-10-understanding-pull-requests/post.html#develop",
+    "title": "Understanding pull requests",
+    "section": "Develop",
+    "text": "Develop\n\nLocal development\nDevelop as usual, committing to local/dev_branch as appropriate via git tools included with Rstudio.\n\n\nKeeping up with OWNER\nAs necessary, and certainly recommended prior to issuing a “pull request”, pull down any changes happening on upstream/main by running:\n\n\n\n\n\n\n\n\nThis brings local/main up-to-date with all development on upstream/main. This should happen without any issue if you haven’t touched local/main, because that is where the updates are pulled to.\nMy current understanding is that this doesn’t perform any merge analysis between local/main and local/dev_branch."
+  },
+  {
+    "objectID": "posts/2021-02-10-understanding-pull-requests/post.html#create-pull-request",
+    "href": "posts/2021-02-10-understanding-pull-requests/post.html#create-pull-request",
+    "title": "Understanding pull requests",
+    "section": "Create pull request",
+    "text": "Create pull request\nWhen you are ready to make the pull request, run the following:\n\n\n\n\n\n\n\n\nThis accomplishes the following:\n\npushes your changes to your forked repo, YOU/REPO\nlaunches a browser window with the github page of OWNER/REPO\nmakes available the “pull request” option within github\n\nAt this point, you work with submitting the pull request on github. For the purposes of this post, assume the pull request is accepted by OWNER. You finish the pull request locally by running:\n\n\n\nThis once again brings local/main up-to-date with upstream/main, which now includes the changes incorporated in the accepted pull request. It also has the effect of switching back to the default branch, main and deleting the development branch dev_branch.\nTo make sure OWNER/REPO receives the changes of the merged pull request, in a shell run:"
+  },
+  {
+    "objectID": "posts/2021-02-10-understanding-pull-requests/post.html#summary",
+    "href": "posts/2021-02-10-understanding-pull-requests/post.html#summary",
+    "title": "Understanding pull requests",
+    "section": "Summary",
+    "text": "Summary"
+  },
+  {
+    "objectID": "posts/2021-02-10-understanding-pull-requests/post.html#notes",
+    "href": "posts/2021-02-10-understanding-pull-requests/post.html#notes",
+    "title": "Understanding pull requests",
+    "section": "Notes",
+    "text": "Notes\n\nCalled a “pull request”, because at the end of the day, YOU are asking OWNER to pull your changes into the OWNER/REPO.\n“formal” names, like OWNER/REPO and “aliases” like upstream have been used interchangeably (sloppily?) to reinforce the concept that “aliases” are useful shorthand for “formal” names\nMy sense is that the forked copy that sits in YOU is there largely for the purpose of being the basis of the pull request. In the documented usethis workflow, pr_push() is the only time that YOU/REPO gets updated during development of the pull request."
+  },
+  {
     "objectID": "archive.html",
     "href": "archive.html",
     "title": "Archive",
     "section": "",
-    "text": "Jan 30, 2021\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nJan 28, 2021\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nJan 26, 2021\n\n\n\n\n\n\nNo matching items"
+    "text": "Feb 10, 2021\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nFeb 7, 2021\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nJan 30, 2021\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nJan 28, 2021\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nJan 26, 2021\n\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "index.html",
@@ -81,6 +137,6 @@
     "href": "blog.html",
     "title": "Orderly Qwilting",
     "section": "",
-    "text": "Order By\n       Default\n         \n          Title\n        \n         \n          Date - Oldest\n        \n         \n          Date - Newest\n        \n     \n  \n    \n      \n      \n    \n\n\n\n\n\n\nBetter Stock Correlation Analysis\n\n\n\n\n\n\n\ntidyquant\n\n\ntibbletime\n\n\nfinance\n\n\n\n\nBuilding on the previous post, with some considerations towards efficiency and increasing depth of analysis.\n\n\n\n\n\n\nJan 30, 2021\n\n\n4 min\n\n\n\n\n\n\n\n\nHarvesting S&P 500 Sectors\n\n\n\n\n\n\n\ntidyquant\n\n\nrvest\n\n\njanitor\n\n\nfinance\n\n\n\n\n“Using open source data to look at within industry correlations.”\n\n\n\n\n\n\nJan 28, 2021\n\n\n1 min\n\n\n\n\n\n\n\n\ndistill and timetk\n\n\n\n\n\n\n\ntimetk\n\n\ndistill\n\n\n\n\n“today’s directed wanderings”\n\n\n\n\n\n\nJan 26, 2021\n\n\n1 min\n\n\n\n\n\n\nNo matching items"
+    "text": "Order By\n       Default\n         \n          Title\n        \n         \n          Date - Oldest\n        \n         \n          Date - Newest\n        \n     \n  \n    \n      \n      \n    \n\n\n\n\n\n\n\n\n\n\n\n\nusethis\n\n\ngit\n\n\n\n\nAn attempt to get my head around pull requests based on the fork and clone model as implemented in the usethis package.\n\n\n\n\n\n\nFeb 10, 2021\n\n\n2 min\n\n\n\n\n\n\n\n\n\n\n\n\n\n\ntidyquant\n\n\ntibbletime\n\n\nfinance\n\n\n\n\nQuestioning whether the mathematical construct: “correlation” is the best measure of determining substitute securities\n\n\n\n\n\n\nFeb 7, 2021\n\n\n3 min\n\n\n\n\n\n\n\n\n\n\n\n\n\n\ntidyquant\n\n\ntibbletime\n\n\nfinance\n\n\n\n\nBuilding on the previous post, with some considerations towards efficiency and increasing depth of analysis.\n\n\n\n\n\n\nJan 30, 2021\n\n\n4 min\n\n\n\n\n\n\n\n\n\n\n\n\n\n\ntidyquant\n\n\nrvest\n\n\njanitor\n\n\nfinance\n\n\n\n\nUsing open source data to look at within industry correlations.\n\n\n\n\n\n\nJan 28, 2021\n\n\n1 min\n\n\n\n\n\n\n\n\n\n\n\n\n\n\ntimetk\n\n\ndistill\n\n\n\n\ntoday’s directed wanderings\n\n\n\n\n\n\nJan 26, 2021\n\n\n1 min\n\n\n\n\n\n\nNo matching items"
   }
 ]

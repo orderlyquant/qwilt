@@ -1,7 +1,7 @@
 ---
 title: "Ha`rvest`ing S&P 500 Sectors"
 description: |
-  "Using open source data to look at within industry correlations."
+  Using open source data to look at within industry correlations.
 author: Brandon Farr
 date: 01-28-2021
 categories: ['tidyquant', 'rvest', 'janitor', 'finance']
