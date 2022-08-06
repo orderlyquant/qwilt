@@ -2,7 +2,6 @@
   {
     "listing": "/archive.html",
     "items": [
-      "/posts/test-post/post.html",
       "/posts/2021-01-30-better-stock-correlation-analysis/better-stock-correlation-analysis.html",
       "/posts/2021-01-28-harvesting-s5-500-sectors/post.html",
       "/posts/2021-01-26_distill-and-timetk/post.html"
@@ -11,7 +10,6 @@
   {
     "listing": "/blog.html",
     "items": [
-      "/posts/test-post/post.html",
       "/posts/2021-01-30-better-stock-correlation-analysis/better-stock-correlation-analysis.html",
       "/posts/2021-01-28-harvesting-s5-500-sectors/post.html",
       "/posts/2021-01-26_distill-and-timetk/post.html"
