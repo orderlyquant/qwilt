@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.0.36">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Brandon Farr">
+<meta name="dcterms.date" content="2021-01-28">
+<meta name="description" content="“Using open source data to look at within industry correlations.”">
+
+<title>Orderly Qwilting - Harvesting S&amp;P 500 Sectors</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Orderly Qwilting</span>
+  </a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.html">Blog</a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../archive.html">Archive</a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/orderlyquant"><i class="bi bi-github" role="img">
+</i> 
+ </a>
+  </li>  
+</ul>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Ha<code>rvest</code>ing S&amp;P 500 Sectors</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">tidyquant</div>
+    <div class="quarto-category">rvest</div>
+    <div class="quarto-category">janitor</div>
+    <div class="quarto-category">finance</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    <p>“Using open source data to look at within industry correlations.”</p>
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Brandon Farr </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">January 28, 2021</p>
+    </div>
+  </div>
+    
+  </div>
+  
+
+</header>
+
+<div class="cell">
+
+</div>
+<p>A little work with the <code>rvest</code> package. Try to get the current S&amp;P 500 constituents from Wikipedia.</p>
+<div class="cell">
+
+</div>
+<p>According to my <a href="https://rvest.tidyverse.org/articles/articles/selectorgadget.html">SelectorGadget</a> work, the element I am looking for is “#constituents”</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>{html_node}
+&lt;table class="wikitable sortable" id="constituents"&gt;
+[1] &lt;tbody&gt;\n&lt;tr&gt;\n&lt;th&gt;\n&lt;a href="/wiki/Ticker_symbol" title="Ticker symbol"&gt; ...</code></pre>
+</div>
+</div>
+<p>Since this is a table, it needs to be passed through the <code>html_table</code> function.</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 503 × 9
+   symbol security        sec_f…¹ gics_…² gics_…³ headq…⁴ date_…⁵    cik founded
+   &lt;chr&gt;  &lt;chr&gt;           &lt;chr&gt;   &lt;chr&gt;   &lt;chr&gt;   &lt;chr&gt;   &lt;chr&gt;    &lt;int&gt; &lt;chr&gt;  
+ 1 MMM    3M              reports Indust… Indust… Saint … 1976-0… 6.67e4 1902   
+ 2 AOS    A. O. Smith     reports Indust… Buildi… Milwau… 2017-0… 9.11e4 1916   
+ 3 ABT    Abbott          reports Health… Health… North … 1964-0… 1.8 e3 1888   
+ 4 ABBV   AbbVie          reports Health… Pharma… North … 2012-1… 1.55e6 2013 (…
+ 5 ABMD   Abiomed         reports Health… Health… Danver… 2018-0… 8.15e5 1981   
+ 6 ACN    Accenture       reports Inform… IT Con… Dublin… 2011-0… 1.47e6 1989   
+ 7 ATVI   Activision Bli… reports Commun… Intera… Santa … 2015-0… 7.19e5 2008   
+ 8 ADM    ADM             reports Consum… Agricu… Chicag… 1981-0… 7.08e3 1902   
+ 9 ADBE   Adobe Inc.      reports Inform… Applic… San Jo… 1997-0… 7.96e5 1982   
+10 ADP    ADP             reports Inform… Data P… Rosela… 1981-0… 8.67e3 1949   
+# … with 493 more rows, and abbreviated variable names ¹​sec_filings,
+#   ²​gics_sector, ³​gics_sub_industry, ⁴​headquarters_location, ⁵​date_first_added
+# ℹ Use `print(n = ...)` to see more rows</code></pre>
+</div>
+</div>
+<p>Wow! Sure enough, we get a tibble with what we want. Notice the use of <code>janitor</code> to clean up the column names for convenience. <em>I think I should always do this.</em></p>
+<p>Let’s look at all of the stocks in the same <code>gics_sub_industry</code> as Apple.</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 4
+  symbol security                   gics_sector            gics_sub_industry    
+  &lt;chr&gt;  &lt;chr&gt;                      &lt;chr&gt;                  &lt;chr&gt;                
+1 AAPL   Apple Inc.                 Information Technology Technology Hardware,…
+2 HPE    Hewlett Packard Enterprise Information Technology Technology Hardware,…
+3 HPQ    HP Inc.                    Information Technology Technology Hardware,…
+4 NTAP   NetApp                     Information Technology Technology Hardware,…
+5 STX    Seagate Technology         Information Technology Technology Hardware,…
+6 WDC    Western Digital            Information Technology Technology Hardware,…</code></pre>
+</div>
+</div>
+<p>This is a great list to pass to <code>tidyquant</code> and try pulling some pricing data.</p>
+<div class="cell">
+
+</div>
+<p>By default, we get about a years worth of prices. Let’s calculate returns:</p>
+<div class="cell">
+
+</div>
+<p>Now, calculate the correlation matrix:</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 3
+# Groups:   symbol_1 [6]
+  symbol_1 symbol_2   cor
+  &lt;chr&gt;    &lt;chr&gt;    &lt;dbl&gt;
+1 AAPL     NTAP     0.574
+2 HPE      HPQ      0.690
+3 HPQ      HPE      0.690
+4 NTAP     HPE      0.670
+5 STX      WDC      0.643
+6 WDC      STX      0.643</code></pre>
+</div>
+</div>
+
+
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    setTimeout(function() {
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      let href = ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const cites = ref.parentNode.getAttribute('data-cites').split(' ');
+    tippyHover(ref, function() {
+      var popup = window.document.createElement('div');
+      cites.forEach(function(cite) {
+        var citeDiv = window.document.createElement('div');
+        citeDiv.classList.add('hanging-indent');
+        citeDiv.classList.add('csl-entry');
+        var biblioDiv = window.document.getElementById('ref-' + cite);
+        if (biblioDiv) {
+          citeDiv.innerHTML = biblioDiv.innerHTML;
+        }
+        popup.appendChild(citeDiv);
+      });
+      return popup.innerHTML;
+    });
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

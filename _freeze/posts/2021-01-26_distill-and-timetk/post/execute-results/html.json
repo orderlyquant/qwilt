@@ -1,0 +1,14 @@
+{
+  "hash": "d2af624cd5e0befc84088e47b6cea707",
+  "result": {
+    "markdown": "---\ntitle: \"distill and timetk\"\ndescription: |\n  \"today's directed wanderings\"\nauthor: Brandon Farr\ndate: 2021-01-26\ncategories:\n  - timetk\n  - distill\n---\n\n\n\n\nToday, I worked on the following:\n\n1. setting up this [blog](https://orderlyquant.github.io/wilting)\n2. running through the weekly Free R Tip from [business-science](https://www.business-science.io/)\n3. read through [GIT SQL Together](https://caitlinhudon.com/2018/11/28/git-sql-together/)\n\n## Distill blog\n\nSet up this blog using the `distill` package and [github pages](https://pages.github.com/).\nA few takeaways:\n\n- see [here](https://github.blog/2016-12-09-publishing-with-github-pages-now-as-easy-as-1-2-3/) for details on getting your repo right\n- see [About](https://orderlyquant.github.io/wilting/about.html) for other details\n\n## Free R Tip\n\nThis week's tip was about many ways to create data frames/tibbles. I was familiar\nwith these, but found the use of `timetk::tk_make_timeseries` informative.\n\n\n::: {.cell}\n\n```{.r .cell-code}\ntibble::tibble(\n  date          = timetk::tk_make_timeseries(\"2010\", length_out = 12, by = \"quarter\"),\n  interest_rate = (seq(12, 3, length.out = 12) * (sin(1:12) + 2)) / 12\n)\n```\n\n::: {.cell-output .cell-output-stdout}\n```\n# A tibble: 12 × 2\n   date       interest_rate\n   <date>             <dbl>\n 1 2010-01-01         2.84 \n 2 2010-04-01         2.71 \n 3 2010-07-01         1.85 \n 4 2010-10-01         0.989\n 5 2011-01-01         0.757\n 6 2011-04-01         1.13 \n 7 2011-07-01         1.57 \n 8 2011-10-01         1.56 \n 9 2012-01-01         1.10 \n10 2012-04-01         0.563\n11 2012-07-01         0.318\n12 2012-10-01         0.366\n```\n:::\n:::\n\n\nNote that the `by` argument is very flexible:\n  \n  - `by` - a character string, containing one of \"sec\", \"min\", \"hour\", \"day\", \"week\",\n\"month\", \"quarter\" or \"year\". You can create regularly spaced sequences using\nphrases like by = \"10 min\"\n\n\n## GIT + SQL\n\n1. You will always need that query again, so \"GIT\" it\n2. Queries change through time, you *may* need a previous version when you realize\nthe *improved* query \"broke\" something in a way that wasn't immediately obvious\n   - save with a `.sql` extension\n\nLooks like there are other interesting posts from this site. I added one to Notion,\nso it may be covered here someday.\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

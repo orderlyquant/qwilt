@@ -1,0 +1,60 @@
+---
+title: "distill and timetk"
+description: |
+  "today's directed wanderings"
+author: Brandon Farr
+date: 2021-01-26
+categories:
+  - timetk
+  - distill
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+Today, I worked on the following:
+
+1. setting up this [blog](https://orderlyquant.github.io/wilting)
+2. running through the weekly Free R Tip from [business-science](https://www.business-science.io/)
+3. read through [GIT SQL Together](https://caitlinhudon.com/2018/11/28/git-sql-together/)
+
+## Distill blog
+
+Set up this blog using the `distill` package and [github pages](https://pages.github.com/).
+A few takeaways:
+
+- see [here](https://github.blog/2016-12-09-publishing-with-github-pages-now-as-easy-as-1-2-3/) for details on getting your repo right
+- see [About](https://orderlyquant.github.io/wilting/about.html) for other details
+
+## Free R Tip
+
+This week's tip was about many ways to create data frames/tibbles. I was familiar
+with these, but found the use of `timetk::tk_make_timeseries` informative.
+
+```{r, echo=TRUE}
+
+tibble::tibble(
+  date          = timetk::tk_make_timeseries("2010", length_out = 12, by = "quarter"),
+  interest_rate = (seq(12, 3, length.out = 12) * (sin(1:12) + 2)) / 12
+)
+
+```
+
+Note that the `by` argument is very flexible:
+  
+  - `by` - a character string, containing one of "sec", "min", "hour", "day", "week",
+"month", "quarter" or "year". You can create regularly spaced sequences using
+phrases like by = "10 min"
+
+
+## GIT + SQL
+
+1. You will always need that query again, so "GIT" it
+2. Queries change through time, you *may* need a previous version when you realize
+the *improved* query "broke" something in a way that wasn't immediately obvious
+   - save with a `.sql` extension
+
+Looks like there are other interesting posts from this site. I added one to Notion,
+so it may be covered here someday.
