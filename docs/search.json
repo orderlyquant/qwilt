@@ -1,0 +1,142 @@
+[
+  {
+    "objectID": "posts/2021-02-07-is-correlation-enough/post.html",
+    "href": "posts/2021-02-07-is-correlation-enough/post.html",
+    "title": "Is Correlation Enough?",
+    "section": "",
+    "text": "Short-comings of previous analysis\nOnce this chunk has been run successfully, just load the data from the local csvs:sp500.csvandpeer_pricing.csv`.\nAgain, load the pre-stored data, and calculate returns.\nIn a minor adjustment from last-time, begin the creation of the peers table with a direct call to left_join, making the two data sets more explicit versus the pipe version.\nAs we saw last time, even the “smoothed” representation of the 30-day rolling correlation exhibits significant non-stationarity."
+  },
+  {
+    "objectID": "posts/2021-02-07-is-correlation-enough/post.html#what-is-a-substitute",
+    "href": "posts/2021-02-07-is-correlation-enough/post.html#what-is-a-substitute",
+    "title": "Is Correlation Enough?",
+    "section": "What is a substitute",
+    "text": "What is a substitute\nWhen looking for a substitute for portfolio purposes, we are seeking:\n\na stock that will perform in line with a base security over a given time-frame\n\nWe know that period returns are the compounded result of daily returns. So, maybe the correlation over the data time frame of the period returns (here 30 days) is a better measure of a good substitute.\nOr, perhaps the “active” return of the two securities (base and substitute) through time is a better, simpler measure as it measure the actual gain/loss that would be experienced by substituting.\n\nperiod_return = function(return) { cumprod(1 + return) %>% last() - 1}\n\npr_roll <- rollify(~period_return(.x), window = 30)\n\naapl_pr_tbl <- aapl_peer_returns_tbl %>%\n  group_by(symbol_2) %>%\n  mutate(\n    pr_1 = pr_roll(return_1),\n    pr_2 = pr_roll(return_2)\n  )\n\n\naapl_pr_tbl %>%\n  group_by(symbol_2) %>%\n  mutate(cor = cor_roll(pr_1, pr_2)) %>%\n  ggplot(aes(x = date, y = cor, color = symbol_2)) +\n  geom_hline(yintercept = 0, color = \"gray40\") +\n  geom_smooth(se = FALSE) + # default loess smoothing\n  ylim(-1, 1) +\n  labs(\n    title = \"AAPL Stock Correlation\",\n    subtitle = \"with GICS sub-industry peers\",\n    caption = \"30-trading day rolling windows\",\n    x = NULL, y = NULL, color = NULL\n  ) +\n  theme_ipsum() +\n  theme(legend.position = \"bottom\") +\n  scale_color_oq() +\n  # scale_x_date(expand = expansion(mult = c(0, 0))) +\n  # for legend to have 1 row\n  guides(col = guide_legend(nrow = 1))"
+  },
+  {
+    "objectID": "posts/2021-01-30-better-stock-correlation-analysis/better-stock-correlation-analysis.html",
+    "href": "posts/2021-01-30-better-stock-correlation-analysis/better-stock-correlation-analysis.html",
+    "title": "Better Stock Correlation Analysis",
+    "section": "",
+    "text": "Short-comings of previous analysis"
+  },
+  {
+    "objectID": "posts/2021-01-30-better-stock-correlation-analysis/better-stock-correlation-analysis.html#api-consideration---repeated-pulls",
+    "href": "posts/2021-01-30-better-stock-correlation-analysis/better-stock-correlation-analysis.html#api-consideration---repeated-pulls",
+    "title": "Better Stock Correlation Analysis",
+    "section": "API Consideration - repeated pulls",
+    "text": "API Consideration - repeated pulls\nGetting to a completed post is an iterative process, that involves: work, knitting the document, assessing the current state, deciding what to add, then repeating until the final version. This leads to repetitive pulls of the data from Tiingo. So, I begin by executing a single pull and storing it, so that we avoid this repetition.\nRun this chunk once while working on the post, then set chunk options to eval=FALSE and echo=TRUE so that the code displays, but is not executed.\n\n# create S&P 500 constituent table\nsp500_tbl <- read_html(\n  \"https://en.wikipedia.org/wiki/List_of_S%26P_500_companies\"\n) %>%\n  html_element(\"#constituents\") %>%\n  html_table() %>%\n  janitor::clean_names()\n\nwrite_csv(sp500_tbl, \"data/sp500.csv\")\n\n# create AAPL peer pricing table\npeer_pricing_tbl <- sp500_tbl %>%\n  filter(\n    gics_sub_industry == sp500_tbl %>% filter(symbol == \"AAPL\") %>% pull(gics_sub_industry)\n  ) %>%\n  pull(symbol) %>%\n  tq_get(.x, get = \"tiingo\")\n\nwrite_csv(peer_pricing_tbl, \"data/peer_pricing.csv\")\n\nOnce this chunk has been run successfully, just load the data from the local csvs:sp500.csvandpeer_pricing.csv`.\n\nsp500_tbl <- read_csv(\"data/sp500.csv\")\npeer_pricing_tbl <- read_csv(\"data/peer_pricing.csv\")\n\nglimpse(sp500_tbl)\n\nRows: 505\nColumns: 9\n$ symbol                <chr> \"MMM\", \"ABT\", \"ABBV\", \"ABMD\", \"ACN\", \"ATVI\", \"AD…\n$ security              <chr> \"3M Company\", \"Abbott Laboratories\", \"AbbVie Inc…\n$ sec_filings           <chr> \"reports\", \"reports\", \"reports\", \"reports\", \"rep…\n$ gics_sector           <chr> \"Industrials\", \"Health Care\", \"Health Care\", \"He…\n$ gics_sub_industry     <chr> \"Industrial Conglomerates\", \"Health Care Equipme…\n$ headquarters_location <chr> \"St. Paul, Minnesota\", \"North Chicago, Illinois\"…\n$ date_first_added      <chr> \"1976-08-09\", \"1964-03-31\", \"2012-12-31\", \"2018-…\n$ cik                   <dbl> 66740, 1800, 1551152, 815094, 1467373, 718877, 7…\n$ founded               <chr> \"1902\", \"1888\", \"2013 (1888)\", \"1981\", \"1989\", \"…\n\nglimpse(peer_pricing_tbl)\n\nRows: 1,764\nColumns: 14\n$ symbol      <chr> \"AAPL\", \"AAPL\", \"AAPL\", \"AAPL\", \"AAPL\", \"AAPL\", \"AAPL\", \"A…\n$ date        <dttm> 2020-01-31, 2020-02-03, 2020-02-04, 2020-02-05, 2020-02-0…\n$ open        <dbl> 320.93, 304.30, 315.31, 323.52, 322.57, 322.37, 314.18, 32…\n$ high        <dbl> 322.68, 313.49, 319.64, 324.76, 325.22, 323.40, 321.55, 32…\n$ low         <dbl> 308.29, 302.22, 313.63, 318.95, 320.26, 318.00, 313.85, 31…\n$ close       <dbl> 309.51, 308.66, 318.85, 321.45, 325.21, 320.03, 321.55, 31…\n$ volume      <dbl> 49897096, 43496401, 34154134, 29706718, 26356385, 29421012…\n$ adjusted    <dbl> 76.71393, 76.50326, 79.02891, 79.67334, 80.60527, 79.51223…\n$ adjHigh     <dbl> 79.97820, 77.70040, 79.22472, 80.49374, 80.60775, 80.34951…\n$ adjLow      <dbl> 76.41155, 74.90706, 77.73510, 79.05370, 79.37839, 79.00787…\n$ adjOpen     <dbl> 79.54445, 75.42260, 78.15150, 80.18640, 79.95093, 80.09361…\n$ adjVolume   <dbl> 199588384, 173985604, 136616536, 118826872, 105425540, 117…\n$ divCash     <dbl> 0.00, 0.00, 0.00, 0.00, 0.00, 0.77, 0.00, 0.00, 0.00, 0.00…\n$ splitFactor <dbl> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1…\n\n# calculate returns as well\npeer_returns_tbl <- peer_pricing_tbl %>%\n  group_by(symbol) %>%\n  tq_transmute(adjusted, periodReturn, period = \"daily\", col_rename = \"return\")"
+  },
+  {
+    "objectID": "posts/2021-01-30-better-stock-correlation-analysis/better-stock-correlation-analysis.html#fewer-steps-fewer-pairs",
+    "href": "posts/2021-01-30-better-stock-correlation-analysis/better-stock-correlation-analysis.html#fewer-steps-fewer-pairs",
+    "title": "Better Stock Correlation Analysis",
+    "section": "Fewer steps, fewer pairs",
+    "text": "Fewer steps, fewer pairs\nBuild a table with AAPL as symbol_1 and peer stocks as symbol_2, using the fact that left_join will create 1-row for every match of date. This is a succinct way of creating all return pairs.\n\naapl_peer_returns_tbl <-\n  peer_returns_tbl %>%\n    filter(symbol == \"AAPL\") %>%\n    select(symbol, date, return) %>%\n  left_join(\n    peer_returns_tbl %>%\n      filter(symbol != \"AAPL\") %>%\n      select(symbol, date, return),\n    by = \"date\",\n    suffix = c(\"_1\", \"_2\")\n  ) %>%\n  select(date, matches(\"symbol\"), everything()) %>%\n  arrange(symbol_2, date) %>%\n  filter(!(return_1 == 0 & return_2 == 0))  # remove days where returns == 0\n\nglimpse(aapl_peer_returns_tbl)\n\nRows: 1,506\nColumns: 5\n$ date     <dttm> 2020-02-03, 2020-02-04, 2020-02-05, 2020-02-06, 2020-02-07, …\n$ symbol_1 <chr> \"AAPL\", \"AAPL\", \"AAPL\", \"AAPL\", \"AAPL\", \"AAPL\", \"AAPL\", \"AAPL…\n$ symbol_2 <chr> \"HPE\", \"HPE\", \"HPE\", \"HPE\", \"HPE\", \"HPE\", \"HPE\", \"HPE\", \"HPE\"…\n$ return_1 <dbl> -0.0027462764, 0.0330136720, 0.0081543045, 0.0116969980, -0.0…\n$ return_2 <dbl> 0.015075377, 0.019801980, 0.032593620, 0.002014775, -0.012064…\n\n\nNow, calculating correlations is simple via a single summarize call. Note: the use parameter of cor is left as the default “everything” which will cause NA to appear if there are any data issues. This is preferable to just returning a result, as we don’t have any data robustness built into the data pipeline.\n\naapl_peer_returns_tbl %>%\n  group_by(symbol_2) %>%\n  summarize(\n    cor = cor(return_1, return_2)\n  )\n\n# A tibble: 6 × 2\n  symbol_2   cor\n  <chr>    <dbl>\n1 HPE      0.477\n2 HPQ      0.498\n3 NTAP     0.537\n4 STX      0.548\n5 WDC      0.472\n6 XRX      0.460\n\n\nIt can be seen that we are getting the same results with less effort, e.g. no pivoting when comparing the above to the results shown below.\n\npeer_returns_tbl %>% \n  \n  # put returns into columns\n  pivot_wider(names_from = symbol, values_from = return) %>%\n  \n  # first day return is 0, so remove row\n  slice(-1) %>%\n  \n  # remove date column, so you can call `cor` on entire tibble\n  select(-date) %>%\n  \n  # calculate correlations\n  cor() %>%\n  \n  # `cor` returns a matrix, convert back into tibble\n  as_tibble(rownames = \"symbol_1\") %>%\n  \n  # transform into tidy format for easier processing\n  pivot_longer(-1, names_to = \"symbol_2\", values_to = \"cor\") %>%\n  \n  # remove the correlations of a stock with itself\n  filter(!(symbol_1 == symbol_2)) %>%\n  \n  # group by symbol_1 and arrange descending by correlation\n  group_by(symbol_1) %>%\n  arrange(desc(cor)) %>%\n  \n  # look at first row in each group == highest correlated stock\n  slice(1)\n\n# A tibble: 7 × 3\n# Groups:   symbol_1 [7]\n  symbol_1 symbol_2   cor\n  <chr>    <chr>    <dbl>\n1 AAPL     STX      0.548\n2 HPE      NTAP     0.712\n3 HPQ      XRX      0.781\n4 NTAP     HPE      0.712\n5 STX      WDC      0.705\n6 WDC      STX      0.705\n7 XRX      HPQ      0.781"
+  },
+  {
+    "objectID": "posts/2021-01-30-better-stock-correlation-analysis/better-stock-correlation-analysis.html#correlation-evolution",
+    "href": "posts/2021-01-30-better-stock-correlation-analysis/better-stock-correlation-analysis.html#correlation-evolution",
+    "title": "Better Stock Correlation Analysis",
+    "section": "Correlation evolution",
+    "text": "Correlation evolution\nThe above analysis produces a single estimate of correlation using all of the data in the dataset. Since the purpose of calculating these correlations is to find a substitute security for a short time frame, 30 days, it is probably better to have a sense of how stable the relationship between the two stocks is through time.\nFor this, we will use the rollify function from the tibbletime package. Using the examples given in the documentation makes this relatively simple\n\nlibrary(tibbletime)\n\ncor_roll <- rollify(~cor(.x, .y), window = 30)\n\naapl_cor_tbl <-\n  aapl_peer_returns_tbl %>%\n  group_by(symbol_2) %>%\n  mutate(cor = cor_roll(return_1, return_2))\n\ntibbletime really is a great convenience.\nNotice how the correlations are noisy (expected), but have in general declined significantly (unexpected).\n\naapl_cor_tbl %>%\n  ggplot(aes(x = date, y = cor, color = symbol_2)) +\n  geom_hline(yintercept = 0, color = \"gray40\") +\n  geom_line() +\n  ylim(-1, 1) +\n  labs(\n    title = \"AAPL Stock Correlation\",\n    subtitle = \"with GICS sub-industry peers\",\n    caption = \"30-trading day rolling windows\",\n    x = NULL, y = NULL, color = NULL\n  ) +\n  theme_tq() +\n  scale_color_tq() +\n  # for legend to have 1 row\n  guides(col = guide_legend(nrow = 1))\n\n\n\n\nA smoothed version makes this trend a little clearer."
+  },
+  {
+    "objectID": "posts/2021-01-28-harvesting-s5-500-sectors/post.html",
+    "href": "posts/2021-01-28-harvesting-s5-500-sectors/post.html",
+    "title": "Harvesting S&P 500 Sectors",
+    "section": "",
+    "text": "A little work with the rvest package. Try to get the current S&P 500 constituents from Wikipedia.\n\n\n\nAccording to my SelectorGadget work, the element I am looking for is “#constituents”\n\n\n{html_node}\n<table class=\"wikitable sortable\" id=\"constituents\">\n[1] <tbody>\\n<tr>\\n<th>\\n<a href=\"/wiki/Ticker_symbol\" title=\"Ticker symbol\"> ...\n\n\nSince this is a table, it needs to be passed through the html_table function.\n\n\n# A tibble: 503 × 8\n   symbol security           gics_sector gics_sub_industry headquarters_location\n   <chr>  <chr>              <chr>       <chr>             <chr>                \n 1 MMM    3M                 Industrials Industrial Congl… Saint Paul, Minnesota\n 2 AOS    A. O. Smith        Industrials Building Products Milwaukee, Wisconsin \n 3 ABT    Abbott             Health Care Health Care Equi… North Chicago, Illin…\n 4 ABBV   AbbVie             Health Care Pharmaceuticals   North Chicago, Illin…\n 5 ACN    Accenture          Informatio… IT Consulting & … Dublin, Ireland      \n 6 ATVI   Activision Blizza… Communicat… Interactive Home… Santa Monica, Califo…\n 7 ADM    ADM                Consumer S… Agricultural Pro… Chicago, Illinois    \n 8 ADBE   Adobe Inc.         Informatio… Application Soft… San Jose, California \n 9 ADP    ADP                Industrials Human Resource &… Roseland, New Jersey \n10 AAP    Advance Auto Parts Consumer D… Automotive Retail Raleigh, North Carol…\n# ℹ 493 more rows\n# ℹ 3 more variables: date_added <chr>, cik <int>, founded <chr>\n\n\nWow! Sure enough, we get a tibble with what we want. Notice the use of janitor to clean up the column names for convenience. I think I should always do this.\nLet’s look at all of the stocks in the same gics_sub_industry as Apple.\n\n\n# A tibble: 6 × 4\n  symbol security                   gics_sector            gics_sub_industry    \n  <chr>  <chr>                      <chr>                  <chr>                \n1 AAPL   Apple Inc.                 Information Technology Technology Hardware,…\n2 HPE    Hewlett Packard Enterprise Information Technology Technology Hardware,…\n3 HPQ    HP Inc.                    Information Technology Technology Hardware,…\n4 NTAP   NetApp                     Information Technology Technology Hardware,…\n5 STX    Seagate Technology         Information Technology Technology Hardware,…\n6 WDC    Western Digital            Information Technology Technology Hardware,…\n\n\nThis is a great list to pass to tidyquant and try pulling some pricing data.\n\n\n\nBy default, we get about a years worth of prices. Let’s calculate returns:\n\n\n\nNow, calculate the correlation matrix:\n\n\n# A tibble: 6 × 3\n# Groups:   symbol_1 [6]\n  symbol_1 symbol_2   cor\n  <chr>    <chr>    <dbl>\n1 AAPL     HPQ      0.607\n2 HPE      HPQ      0.800\n3 HPQ      HPE      0.800\n4 NTAP     HPQ      0.693\n5 STX      WDC      0.791\n6 WDC      STX      0.791"
+  },
+  {
+    "objectID": "posts/2021-01-26_distill-and-timetk/post.html",
+    "href": "posts/2021-01-26_distill-and-timetk/post.html",
+    "title": "distill and timetk",
+    "section": "",
+    "text": "Today, I worked on the following:"
+  },
+  {
+    "objectID": "posts/2021-01-26_distill-and-timetk/post.html#distill-blog",
+    "href": "posts/2021-01-26_distill-and-timetk/post.html#distill-blog",
+    "title": "distill and timetk",
+    "section": "Distill blog",
+    "text": "Distill blog\nSet up this blog using the distill package and github pages. A few takeaways:\n\nsee here for details on getting your repo right\nsee About for other details"
+  },
+  {
+    "objectID": "posts/2021-01-26_distill-and-timetk/post.html#free-r-tip",
+    "href": "posts/2021-01-26_distill-and-timetk/post.html#free-r-tip",
+    "title": "distill and timetk",
+    "section": "Free R Tip",
+    "text": "Free R Tip\nThis week’s tip was about many ways to create data frames/tibbles. I was familiar with these, but found the use of timetk::tk_make_timeseries informative.\n\ntibble::tibble(\n  date          = timetk::tk_make_timeseries(\"2010\", length_out = 12, by = \"quarter\"),\n  interest_rate = (seq(12, 3, length.out = 12) * (sin(1:12) + 2)) / 12\n)\n\n# A tibble: 12 × 2\n   date       interest_rate\n   <date>             <dbl>\n 1 2010-01-01         2.84 \n 2 2010-04-01         2.71 \n 3 2010-07-01         1.85 \n 4 2010-10-01         0.989\n 5 2011-01-01         0.757\n 6 2011-04-01         1.13 \n 7 2011-07-01         1.57 \n 8 2011-10-01         1.56 \n 9 2012-01-01         1.10 \n10 2012-04-01         0.563\n11 2012-07-01         0.318\n12 2012-10-01         0.366\n\n\nNote that the by argument is very flexible:\n\nby - a character string, containing one of “sec”, “min”, “hour”, “day”, “week”, “month”, “quarter” or “year”. You can create regularly spaced sequences using phrases like by = “10 min”"
+  },
+  {
+    "objectID": "posts/2021-01-26_distill-and-timetk/post.html#git-sql",
+    "href": "posts/2021-01-26_distill-and-timetk/post.html#git-sql",
+    "title": "distill and timetk",
+    "section": "GIT + SQL",
+    "text": "GIT + SQL\n\nYou will always need that query again, so “GIT” it\nQueries change through time, you may need a previous version when you realize the improved query “broke” something in a way that wasn’t immediately obvious\n\nsave with a .sql extension\n\n\nLooks like there are other interesting posts from this site. I added one to Notion, so it may be covered here someday."
+  },
+  {
+    "objectID": "posts/2021-02-10-understanding-pull-requests/post.html",
+    "href": "posts/2021-02-10-understanding-pull-requests/post.html",
+    "title": "Understanding pull requests",
+    "section": "",
+    "text": "“Fork and clone” is the basis for issuing the “pull requests” that are the lifeblood of open source development on github in the R universe. The purpose of this What I Learned Today post is to understand this workflow from two levels:\nGood reference information is found here."
+  },
+  {
+    "objectID": "posts/2021-02-10-understanding-pull-requests/post.html#fork-and-clone",
+    "href": "posts/2021-02-10-understanding-pull-requests/post.html#fork-and-clone",
+    "title": "Understanding pull requests",
+    "section": "Fork and clone",
+    "text": "Fork and clone\nTo begin a “fork and clone” within the “happygitwithr” / usethis recommended workflow, run:\n\nusethis::create_from_github(\"OWNER/REPO\", \"local_dir\", fork = TRUE)\n\n\n\n\n\n\nThis accomplishes three things:\n\nA special copy, a fork, of OWNER/REPO is made to your github account, referred to herein as YOU/REPO.\nYOU/REPO is cloned to local_dir on your computer.\ngit “remotes” are setup as follows:\n\norigin: YOU/REPO, can push and pull\nupstream: OWNER/REPO, can pull, can’t push\n\n\nBest “pull request” practices dictate working on a local branch in order to avoid local merge conflicts and to ease the merge process for OWNER once the “pull request” is issued. To establish a local branch on which to do your work, run:\n\n\n\nThis creates and switches to a local development branch, local/dev_branch, that is separate from the local/main branch. The allows your local repo to incorporate changes in upstream, i.e. keep up-to-date with development in OWNER/REPO while you develop locally."
+  },
+  {
+    "objectID": "posts/2021-02-10-understanding-pull-requests/post.html#develop",
+    "href": "posts/2021-02-10-understanding-pull-requests/post.html#develop",
+    "title": "Understanding pull requests",
+    "section": "Develop",
+    "text": "Develop\n\nLocal development\nDevelop as usual, committing to local/dev_branch as appropriate via git tools included with Rstudio.\n\n\nKeeping up with OWNER\nAs necessary, and certainly recommended prior to issuing a “pull request”, pull down any changes happening on upstream/main by running:\n\n\n\n\n\n\n\n\nThis brings local/main up-to-date with all development on upstream/main. This should happen without any issue if you haven’t touched local/main, because that is where the updates are pulled to.\nMy current understanding is that this doesn’t perform any merge analysis between local/main and local/dev_branch."
+  },
+  {
+    "objectID": "posts/2021-02-10-understanding-pull-requests/post.html#create-pull-request",
+    "href": "posts/2021-02-10-understanding-pull-requests/post.html#create-pull-request",
+    "title": "Understanding pull requests",
+    "section": "Create pull request",
+    "text": "Create pull request\nWhen you are ready to make the pull request, run the following:\n\n\n\n\n\n\n\n\nThis accomplishes the following:\n\npushes your changes to your forked repo, YOU/REPO\nlaunches a browser window with the github page of OWNER/REPO\nmakes available the “pull request” option within github\n\nAt this point, you work with submitting the pull request on github. For the purposes of this post, assume the pull request is accepted by OWNER. You finish the pull request locally by running:\n\n\n\nThis once again brings local/main up-to-date with upstream/main, which now includes the changes incorporated in the accepted pull request. It also has the effect of switching back to the default branch, main and deleting the development branch dev_branch.\nTo make sure OWNER/REPO receives the changes of the merged pull request, in a shell run:"
+  },
+  {
+    "objectID": "posts/2021-02-10-understanding-pull-requests/post.html#summary",
+    "href": "posts/2021-02-10-understanding-pull-requests/post.html#summary",
+    "title": "Understanding pull requests",
+    "section": "Summary",
+    "text": "Summary"
+  },
+  {
+    "objectID": "posts/2021-02-10-understanding-pull-requests/post.html#notes",
+    "href": "posts/2021-02-10-understanding-pull-requests/post.html#notes",
+    "title": "Understanding pull requests",
+    "section": "Notes",
+    "text": "Notes\n\nCalled a “pull request”, because at the end of the day, YOU are asking OWNER to pull your changes into the OWNER/REPO.\n“formal” names, like OWNER/REPO and “aliases” like upstream have been used interchangeably (sloppily?) to reinforce the concept that “aliases” are useful shorthand for “formal” names\nMy sense is that the forked copy that sits in YOU is there largely for the purpose of being the basis of the pull request. In the documented usethis workflow, pr_push() is the only time that YOU/REPO gets updated during development of the pull request."
+  },
+  {
+    "objectID": "archive.html",
+    "href": "archive.html",
+    "title": "Archive",
+    "section": "",
+    "text": "Understanding pull requests\n\n\n\n\n\n\n\n\n\nFeb 10, 2021\n\n\n\n\n\n\n\n\nIs Correlation Enough?\n\n\n\n\n\n\n\n\n\nFeb 7, 2021\n\n\n\n\n\n\n\n\nBetter Stock Correlation Analysis\n\n\n\n\n\n\n\n\n\nJan 30, 2021\n\n\n\n\n\n\n\n\nHarvesting S&P 500 Sectors\n\n\n\n\n\n\n\n\n\nJan 28, 2021\n\n\n\n\n\n\n\n\ndistill and timetk\n\n\n\n\n\n\n\n\n\nJan 26, 2021\n\n\n\n\n\n\nNo matching items"
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "About",
+    "section": "",
+    "text": "About this blog"
+  },
+  {
+    "objectID": "blog.html",
+    "href": "blog.html",
+    "title": "Orderly Qwilting",
+    "section": "",
+    "text": "Order By\n       Default\n         \n          Title\n        \n         \n          Date - Oldest\n        \n         \n          Date - Newest\n        \n     \n  \n    \n      \n      \n    \n\n\n\n\n\n\nUnderstanding pull requests\n\n\n\n\n\n\n\nusethis\n\n\ngit\n\n\n\n\nAn attempt to get my head around pull requests based on the fork and clone model as implemented in the usethis package.\n\n\n\n\n\n\nFeb 10, 2021\n\n\n2 min\n\n\n\n\n\n\n\n\nIs Correlation Enough?\n\n\n\n\n\n\n\ntidyquant\n\n\ntibbletime\n\n\nfinance\n\n\n\n\nQuestioning whether the mathematical construct: “correlation” is the best measure of determining substitute securities\n\n\n\n\n\n\nFeb 7, 2021\n\n\n3 min\n\n\n\n\n\n\n\n\nBetter Stock Correlation Analysis\n\n\n\n\n\n\n\ntidyquant\n\n\ntibbletime\n\n\nfinance\n\n\n\n\nBuilding on the previous post, with some considerations towards efficiency and increasing depth of analysis.\n\n\n\n\n\n\nJan 30, 2021\n\n\n4 min\n\n\n\n\n\n\n\n\nHarvesting S&P 500 Sectors\n\n\n\n\n\n\n\ntidyquant\n\n\nrvest\n\n\njanitor\n\n\nfinance\n\n\n\n\nUsing open source data to look at within industry correlations.\n\n\n\n\n\n\nJan 28, 2021\n\n\n1 min\n\n\n\n\n\n\n\n\ndistill and timetk\n\n\n\n\n\n\n\ntimetk\n\n\ndistill\n\n\n\n\ntoday’s directed wanderings\n\n\n\n\n\n\nJan 26, 2021\n\n\n1 min\n\n\n\n\n\n\nNo matching items"
+  }
+]

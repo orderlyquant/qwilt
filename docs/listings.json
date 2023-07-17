@@ -1,0 +1,22 @@
+[
+  {
+    "listing": "/archive.html",
+    "items": [
+      "/posts/2021-02-10-understanding-pull-requests/post.html",
+      "/posts/2021-02-07-is-correlation-enough/post.html",
+      "/posts/2021-01-30-better-stock-correlation-analysis/better-stock-correlation-analysis.html",
+      "/posts/2021-01-28-harvesting-s5-500-sectors/post.html",
+      "/posts/2021-01-26_distill-and-timetk/post.html"
+    ]
+  },
+  {
+    "listing": "/blog.html",
+    "items": [
+      "/posts/2021-02-10-understanding-pull-requests/post.html",
+      "/posts/2021-02-07-is-correlation-enough/post.html",
+      "/posts/2021-01-30-better-stock-correlation-analysis/better-stock-correlation-analysis.html",
+      "/posts/2021-01-28-harvesting-s5-500-sectors/post.html",
+      "/posts/2021-01-26_distill-and-timetk/post.html"
+    ]
+  }
+]
